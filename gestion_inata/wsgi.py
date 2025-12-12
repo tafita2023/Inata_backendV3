@@ -12,7 +12,7 @@ import os
 from django.core.wsgi import get_wsgi_application
 
 settings_module = 'gestion_inata.deploiment_settings' if 'RENDER_EXTERNAL_HOSTNAME' in os.environ else 'gestion_inata.deploiment_settings'
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gestion_inata.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_module)
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gestion_inata.settings')
 
