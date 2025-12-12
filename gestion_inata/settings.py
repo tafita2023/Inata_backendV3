@@ -132,11 +132,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://gestion-inatabackend.onrender.com/"
+    "https://gestion-inata.onrender.com/"
 ]
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "Authorization",
+     "Content-Type",
 ]
 
 CORS_ALLOW_METHODS = [
@@ -152,11 +153,12 @@ STATIC_ROOT = BASE_DIR/'staticfiles'
 
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = os.environ.get(
-    "CSRF_TRUSTED_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173,https://gestion-inatabackend.onrender.com"
-).split(",")
-
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173", 
+    "https://gestion-inata.onrender.com",  # Frontend
+    "https://gestion-inatabackend.onrender.com",  # Backend
+]
 AUTH_USER_MODEL = 'api.User'
 
 # REST Framework
