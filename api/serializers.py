@@ -20,14 +20,13 @@ class UserSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
-    adresse = serializers.CharField(required=False)
     date_naissance = serializers.DateField(format="%d/%m/%Y", required=False)
     lieu_naissance = serializers.CharField(required=False)
     
     class Meta:
         model = User
         fields = [
-            'id', 'nom', 'prenom', 'email', 'phone', 'adresse', 'role',
+            'id', 'nom', 'prenom', 'email', 'phone', 'role',
             'is_active', 'password', 'classe', 'classe_id', 
             'annee', 'photo', 'photo_url', 'date_naissance', 'lieu_naissance'
         ]
