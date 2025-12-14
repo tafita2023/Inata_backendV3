@@ -11,7 +11,7 @@ from .views import (
     FraisPaiementDetailView, AdminPaiementCreateView, AdminEvaluationListView, AdminNoteListView,
     DevoirListCreateView, download_devoir, DevoirEtudiantView, MatiereEtudiantView, NotesEtudiantView, emploi_etudiant,
     etudiant_info, promotion_etudiants, UserDetailView, admin_notes_etudiants, BulletinView, DownloadBulletinView, 
-    DownloadBulletinsClasseView, UniteViewSet, SalaireClasseMatiereViewSet, debug_permissions
+    DownloadBulletinsClasseView, UniteViewSet, SalaireClasseMatiereViewSet, debug_permissions, GetInvitationView
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -40,6 +40,7 @@ urlpatterns = [
     path('login/', TokenObtainPairView.as_view(), name='login'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('admin/generate-invite/', GenerateInvitationLink.as_view(), name='generate-invite'),
+    path('invitation/<str:token>/', GetInvitationView.as_view(), name='get-invitation'),
     path('register/<str:token>/', SecureRegisterView.as_view(), name='secure-register'),
     path('user/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
     path('user/modifier-profil/', UpdateProfilView.as_view(), name='update-profile'),

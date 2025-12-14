@@ -266,7 +266,20 @@ class SecureRegisterView(generics.CreateAPIView):
 
         print("❌ Erreurs du serializer :", serializer.errors)
         return Response(serializer.errors, status=400)
-    
+
+class GetInvitationView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        try:
+            invitation = InvitationLink.objects.get(token=token, is_used=False)
+            data = {"role": invitation.role}
+            if invitation.role == "etud" and invitation.classe:
+                data["classe"] = invitation.classe.niveau
+            return Response(data, status=200)
+        except InvitationLink.DoesNotExist:
+            return Response({"error": "Lien invalide ou expiré"}, status=404)
+        
 # ---------------- Classes, Salles, Matières ----------------
 class ClasseViewSet(viewsets.ModelViewSet):
     queryset = Classe.objects.all()
