@@ -47,6 +47,7 @@ from .serializers import (
 )
 # Supprimez les imports en double et gardez seulement celui depuis le répertoire courant
 from .permissions import IsAdmin, IsAdminOrProf
+from rest_framework.exceptions import ValidationError
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # ---------------- Utilisateur connecté ----------------
@@ -1309,11 +1310,22 @@ class AdminEvaluationListView(generics.ListAPIView):
 class AdminNoteListView(generics.ListAPIView):
     serializer_class = NoteAdminSerializer
     permission_classes = [IsAuthenticated, IsAdmin]
-    
+
     def get_queryset(self):
         matiere_id = self.request.query_params.get('matiere')
         classe_id = self.request.query_params.get('classe')
-        return Note.objects.filter(evaluation__matiere_id=matiere_id, etudiant__classe_id=classe_id)
+
+        if not matiere_id or not classe_id:
+            raise ValidationError("Les paramètres 'matiere' et 'classe' sont obligatoires.")
+
+        return (
+            Note.objects
+            .select_related('etudiant', 'evaluation', 'evaluation__matiere')
+            .filter(
+                evaluation__matiere_id=int(matiere_id),
+                etudiant__classe_id=int(classe_id)
+            )
+        )
     
 class DevoirListCreateView(generics.ListCreateAPIView):
     serializer_class = ExerciceSerializer
