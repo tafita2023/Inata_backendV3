@@ -247,8 +247,11 @@ class SecureRegisterView(generics.CreateAPIView):
         data['role'] = invitation.role
 
         # Si c'est un étudiant, on assigne la classe depuis le lien
-        if invitation.role == 'etud' and invitation.classe:
-            data['classe_id'] = invitation.classe.id
+        if invitation.role == 'etud':
+            if invitation.classe:
+                data['classe_id'] = invitation.classe.id
+            else:
+                return Response({"error": "Classe non assignée à ce lien d'invitation"}, status=400)
 
         # Pour les profs/admins, on supprime les champs inutiles si envoyés
         if invitation.role in ['prof', 'admin']:
