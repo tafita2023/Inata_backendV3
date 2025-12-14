@@ -463,29 +463,63 @@ class PaiementsEtudiantView(APIView):
     def get(self, request):
         try:
             user = request.user
-            paiements = Paiement.objects.filter(etudiant=user).prefetch_related('frais_mensuels').order_by('-date_creation')
+            
+            # Debug logging
+            print(f"🔍 Récupération TOUS les paiements pour: {user.email}")
+            
+            # Récupérer TOUS les paiements, quel que soit le statut
+            paiements = Paiement.objects.filter(
+                etudiant=user
+            ).select_related('etudiant').prefetch_related(
+                'frais_mensuels'
+            ).order_by('-date_creation')
+            
+            print(f"✅ Paiements trouvés (tous statuts): {paiements.count()}")
             
             data = []
             for paiement in paiements:
+                # Debug chaque paiement
+                print(f"📦 Paiement #{paiement.id}: statut='{paiement.statut}', montant={paiement.montant_total}")
+                
+                frais_list = []
+                for frais in paiement.frais_mensuels.all():
+                    frais_list.append({
+                        'id': frais.id,
+                        'mois': frais.mois,
+                        'montant': float(frais.montant),
+                        'est_paye': frais.est_paye,
+                        'annee_scolaire': frais.annee_scolaire
+                    })
+                
                 data.append({
                     'id': paiement.id,
-                    'montant_total': paiement.montant_total,
-                    'date_creation': paiement.date_creation,
-                    'statut': paiement.statut,
-                    'frais_mensuels': [
-                        {
-                            'id': frais.id,
-                            'mois': frais.mois,
-                            'montant': frais.montant
-                        } for frais in paiement.frais_mensuels.all()
-                    ]
+                    'montant_total': float(paiement.montant_total),
+                    'mode_paiement': paiement.mode_paiement or 'Non spécifié',
+                    'date_creation': paiement.date_creation.strftime('%Y-%m-%d %H:%M:%S') if paiement.date_creation else None,
+                    'date_paiement': paiement.date_paiement.strftime('%Y-%m-%d %H:%M:%S') if paiement.date_paiement else None,
+                    'statut': paiement.statut or 'Inconnu',
+                    'stripe_session_id': paiement.stripe_session_id,
+                    'frais_mensuels': frais_list,
+                    'nombre_mois': len(frais_list)
                 })
             
-            return Response(data, status=status.HTTP_200_OK)
+            return Response({
+                'success': True,
+                'count': len(data),
+                'paiements': data
+            }, status=status.HTTP_200_OK)
             
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+            print(f"❌ Erreur récupération paiements: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            
+            return Response({
+                'success': False,
+                'error': 'Erreur lors de la récupération des paiements',
+                'detail': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
 class CreateStripeSessionView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
