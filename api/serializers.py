@@ -6,11 +6,11 @@ from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Classe, Matiere, EmploiDuTemps, Salle, Paiement, FraisMensuel, FraisPaiement, Note, Evaluation, Tache, Evenement, Absence, Exercice, Unite, SalaireClasseMatiere, FraisMensuelProf, PaiementProf
 
+from rest_framework import serializers
+from .models import User, Classe
+
 class UserSerializer(serializers.ModelSerializer):
-    # Enlever read_only=True pour permettre les mises à jour
     photo = serializers.ImageField(required=False, allow_null=True)
-    
-    # Ajouter un champ pour l'URL complète de la photo
     photo_url = serializers.SerializerMethodField()
     
     classe = serializers.StringRelatedField(read_only=True)
@@ -20,19 +20,20 @@ class UserSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    adresse = serializers.CharField(required=False)
     date_naissance = serializers.DateField(format="%d/%m/%Y", required=False)
     lieu_naissance = serializers.CharField(required=False)
     
     class Meta:
         model = User
         fields = [
-            'id', 'nom', 'prenom', 'email', 'phone', 'role',
+            'id', 'nom', 'prenom', 'email', 'phone', 'adresse', 'role',
             'is_active', 'password', 'classe', 'classe_id', 
             'annee', 'photo', 'photo_url', 'date_naissance', 'lieu_naissance'
         ]
         extra_kwargs = {
             'password': {'write_only': True},
-            'photo': {'required': False}  # Photo facultative
+            'photo': {'required': False}
         }
 
     def get_photo_url(self, obj):
@@ -40,10 +41,26 @@ class UserSerializer(serializers.ModelSerializer):
         if obj.photo and hasattr(obj.photo, 'url'):
             request = self.context.get('request')
             if request:
-                # Construire l'URL absolue
                 return request.build_absolute_uri(obj.photo.url)
             return obj.photo.url
         return None
+
+    def validate(self, attrs):
+        """Supprime les champs non nécessaires selon le rôle"""
+        role = attrs.get('role') or getattr(self.instance, 'role', None)
+
+        if role != 'etud':
+            # Prof ou Admin => ignorer ces champs
+            attrs.pop('date_naissance', None)
+            attrs.pop('lieu_naissance', None)
+            attrs.pop('classe', None)
+            attrs.pop('classe_id', None)
+        else:
+            # Étudiant => classe_id obligatoire
+            if 'classe_id' not in attrs or attrs['classe_id'] is None:
+                raise serializers.ValidationError({"classe_id": "Classe obligatoire pour les étudiants."})
+
+        return super().validate(attrs)
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
@@ -60,7 +77,7 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
             instance.save()
         return instance
-    
+
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)

@@ -242,19 +242,31 @@ class SecureRegisterView(generics.CreateAPIView):
             invitation = InvitationLink.objects.get(token=token, is_used=False)
         except InvitationLink.DoesNotExist:
             return Response({"error": "Lien invalide ou déjà utilisé"}, status=400)
+
         data = request.data.copy()
         data['role'] = invitation.role
+
+        # Si c'est un étudiant, on assigne la classe depuis le lien
         if invitation.role == 'etud' and invitation.classe:
             data['classe_id'] = invitation.classe.id
-        serializer = self.get_serializer(data=data)
+
+        # Pour les profs/admins, on supprime les champs inutiles si envoyés
+        if invitation.role in ['prof', 'admin']:
+            data.pop('adresse', None)
+            data.pop('date_naissance', None)
+            data.pop('lieu_naissance', None)
+            data.pop('classe_id', None)
+
+        serializer = self.get_serializer(data=data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             invitation.is_used = True
             invitation.save()
             return Response(serializer.data, status=201)
+
         print("❌ Erreurs du serializer :", serializer.errors)
         return Response(serializer.errors, status=400)
-
+    
 # ---------------- Classes, Salles, Matières ----------------
 class ClasseViewSet(viewsets.ModelViewSet):
     queryset = Classe.objects.all()

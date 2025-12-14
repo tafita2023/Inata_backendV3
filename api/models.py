@@ -102,6 +102,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_login = models.DateTimeField(null=True, blank=True)
     photo = models.ImageField(upload_to='profile/', null=True, blank=True)
     objects = UserManager()
+    adresse = models.CharField(null=True, blank=True)
     date_naissance = models.DateField(null=True, blank=True)
     lieu_naissance = models.CharField(max_length=255, null=True, blank=True)
 
