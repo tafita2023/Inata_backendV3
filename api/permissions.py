@@ -43,6 +43,24 @@ class IsProf(BasePermission):
         
         return False
 
+from rest_framework.permissions import BasePermission
+
+class IsAdminOrProf(BasePermission):
+    """Accès réservé aux admins et professeurs"""
+    def has_permission(self, request, view):
+        user = request.user
+
+        if not user or not user.is_authenticated:
+            return False
+
+        if getattr(user, 'is_superuser', False):
+            return True
+
+        if hasattr(user, 'role'):
+            return user.role in ["admin", "prof"]
+
+        return False
+
 # Optionnel : Ajoutez cette permission pour plus de flexibilité
 class IsEtud(BasePermission):
     """Accès réservé aux étudiants uniquement"""
