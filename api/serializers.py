@@ -281,21 +281,55 @@ class PaiementManualSerializer(serializers.Serializer):
     
 # Afficher les notes pour l'admin
 class NoteAdminSerializer(serializers.ModelSerializer):
-    etudiant_nom = serializers.CharField(source='etudiant.nom', read_only=True)
-    etudiant_prenom = serializers.CharField(source='etudiant.prenom', read_only=True)
-    etudiant_annee = serializers.IntegerField(source='etudiant.annee', read_only=True)
-    matiere_nom = serializers.CharField(source='evaluation.matiere.nom', read_only=True)
-    evaluation_nom = serializers.CharField(source='evaluation.nom', read_only=True)
-    semestre = serializers.IntegerField(source='evaluation.semestre', read_only=True)
-    classe = serializers.CharField(source='etudiant.classe.niveau', read_only=True)
+    etudiant_nom = serializers.SerializerMethodField()
+    etudiant_prenom = serializers.SerializerMethodField()
+    etudiant_annee = serializers.SerializerMethodField()
+    matiere_nom = serializers.SerializerMethodField()
+    evaluation_nom = serializers.SerializerMethodField()
+    semestre = serializers.SerializerMethodField()
+    classe = serializers.SerializerMethodField()
 
     class Meta:
         model = Note
         fields = [
-            'id', 'etudiant', 'etudiant_nom', 'etudiant_prenom', 'etudiant_annee',
-            'classe', 'evaluation', 'evaluation_nom', 'matiere_nom',
-            'semestre', 'valeur', 'remarque'
+            'id',
+            'etudiant',
+            'etudiant_nom',
+            'etudiant_prenom',
+            'etudiant_annee',
+            'classe',
+            'evaluation',
+            'evaluation_nom',
+            'matiere_nom',
+            'semestre',
+            'valeur',
+            'remarque'
         ]
+
+    def get_etudiant_nom(self, obj):
+        return obj.etudiant.nom if obj.etudiant else None
+
+    def get_etudiant_prenom(self, obj):
+        return obj.etudiant.prenom if obj.etudiant else None
+
+    def get_etudiant_annee(self, obj):
+        return obj.etudiant.annee if obj.etudiant else None
+
+    def get_classe(self, obj):
+        return obj.etudiant.classe.niveau if obj.etudiant and obj.etudiant.classe else None
+
+    def get_evaluation_nom(self, obj):
+        return obj.evaluation.nom if obj.evaluation else None
+
+    def get_matiere_nom(self, obj):
+        return (
+            obj.evaluation.matiere.nom
+            if obj.evaluation and obj.evaluation.matiere
+            else None
+        )
+
+    def get_semestre(self, obj):
+        return obj.evaluation.semestre if obj.evaluation else None
 
 class ExerciceSerializer(serializers.ModelSerializer):
     # On affiche les infos complètes en lecture
