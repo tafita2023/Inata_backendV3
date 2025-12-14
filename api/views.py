@@ -46,7 +46,7 @@ from .serializers import (
     UniteSerializer, SalaireClasseMatiereSerializer, PaiementProfSerializer
 )
 # Supprimez les imports en double et gardez seulement celui depuis le répertoire courant
-from .permissions import IsAdmin
+from .permissions import IsAdmin, IsAdminOrProf
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # ---------------- Utilisateur connecté ----------------
@@ -288,12 +288,12 @@ class GetInvitationView(APIView):
 class ClasseViewSet(viewsets.ModelViewSet):
     queryset = Classe.objects.all()
     serializer_class = ClasseSerializer
-    permission_classes = [IsAuthenticated, IsAdmin]  # Ajout de IsAdmin pour les opérations admin
+    permission_classes = [IsAuthenticated, IsAdminOrProf]
 
 class SalleViewSet(viewsets.ModelViewSet):
     queryset = Salle.objects.all()
     serializer_class = SalleSerializer
-    permission_classes = [IsAuthenticated, IsAdmin]  # Ajout de IsAdmin
+    permission_classes = [IsAuthenticated, IsAdminOrProf]  # Ajout de IsAdmin
 
 class UniteViewSet(viewsets.ModelViewSet):
     queryset = Unite.objects.all()

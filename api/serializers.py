@@ -12,7 +12,7 @@ from .models import User, Classe
 class UserSerializer(serializers.ModelSerializer):
     photo = serializers.ImageField(required=False, allow_null=True)
     photo_url = serializers.SerializerMethodField()
-    
+
     classe = serializers.StringRelatedField(read_only=True)
     classe_id = serializers.PrimaryKeyRelatedField(
         source='classe',
@@ -20,23 +20,20 @@ class UserSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+
     date_naissance = serializers.DateField(format="%d/%m/%Y", required=False)
     lieu_naissance = serializers.CharField(required=False)
-    
+
     class Meta:
         model = User
         fields = [
             'id', 'nom', 'prenom', 'email', 'phone', 'role',
-            'is_active', 'password', 'classe', 'classe_id', 
-            'annee', 'photo', 'photo_url', 'date_naissance', 'lieu_naissance'
+            'is_active', 'classe', 'classe_id',
+            'annee', 'photo', 'photo_url',
+            'date_naissance', 'lieu_naissance'
         ]
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'photo': {'required': False}
-        }
 
     def get_photo_url(self, obj):
-        """Retourne l'URL complète de la photo"""
         if obj.photo and hasattr(obj.photo, 'url'):
             request = self.context.get('request')
             if request:
@@ -48,32 +45,16 @@ class UserSerializer(serializers.ModelSerializer):
         role = attrs.get('role') or getattr(self.instance, 'role', None)
 
         if role != 'etud':
-            # Prof ou Admin => ignorer ces champs
             attrs.pop('date_naissance', None)
             attrs.pop('lieu_naissance', None)
             attrs.pop('classe', None)
         else:
-            # Étudiant => classe obligatoire
             if 'classe' not in attrs or attrs['classe'] is None:
-                raise serializers.ValidationError({"classe_id": "Classe obligatoire pour les étudiants."})
+                raise serializers.ValidationError({
+                    "classe_id": "Classe obligatoire pour les étudiants."
+                })
 
-        return super().validate(attrs)
-    
-    def create(self, validated_data):
-            password = validated_data.pop('password', None)
-            user = super().create(validated_data)
-            if password:
-                user.set_password(password)
-                user.save()
-            return user
-
-    def update(self, instance, validated_data):
-        password = validated_data.pop('password', None)
-        instance = super().update(instance, validated_data)
-        if password:
-            instance.set_password(password)
-            instance.save()
-        return instance
+        return attrs
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
