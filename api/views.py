@@ -571,20 +571,77 @@ class CheckPaymentStatusView(APIView):
             return Response({"error": "session_id manquant"}, status=400)
         
         try:
+            # 1. Vérifier d'abord dans votre base de données
             paiement = Paiement.objects.get(
                 stripe_session_id=session_id,
                 etudiant=request.user
             )
             
             return Response({
-                "statut": paiement.statut,
+                "status": "success",
+                "payment_status": paiement.statut,
                 "montant_total": paiement.montant_total,
-                "date_paiement": paiement.date_paiement
+                "date_paiement": paiement.date_paiement,
+                "mode_paiement": paiement.mode_paiement,
+                "frais_mensuels": [
+                    {
+                        'id': frais.id,
+                        'mois': frais.mois,
+                        'montant': frais.montant
+                    } for frais in paiement.frais_mensuels.all()
+                ]
             })
             
         except Paiement.DoesNotExist:
-            return Response({"error": "Paiement non trouvé"}, status=404)
-
+            # 2. Si non trouvé, vérifier auprès de Stripe directement
+            try:
+                stripe_session = stripe.checkout.Session.retrieve(session_id)
+                
+                # Vérifier si la session Stripe est payée
+                if stripe_session.payment_status == 'paid':
+                    # Le paiement est réussi sur Stripe, mais pas encore dans notre DB
+                    # Cela arrive souvent quand le webhook est en retard
+                    return Response({
+                        "status": "processing",
+                        "payment_status": "paid_on_stripe",
+                        "session_status": stripe_session.status,
+                        "stripe_payment_status": stripe_session.payment_status,
+                        "message": "Paiement confirmé par Stripe, traitement en cours..."
+                    })
+                    
+                elif stripe_session.payment_status == 'unpaid':
+                    return Response({
+                        "status": "failed",
+                        "payment_status": "unpaid",
+                        "session_status": stripe_session.status,
+                        "message": "Paiement non effectué"
+                    })
+                    
+                else:
+                    return Response({
+                        "status": "pending",
+                        "payment_status": stripe_session.payment_status,
+                        "session_status": stripe_session.status,
+                        "message": "Paiement en attente de confirmation"
+                    })
+                    
+            except stripe.error.StripeError as e:
+                # Erreur Stripe
+                print(f"❌ Erreur Stripe: {str(e)}")
+                return Response({
+                    "status": "error",
+                    "error": "Erreur de communication avec le service de paiement",
+                    "detail": str(e)
+                }, status=500)
+                
+            except Exception as e:
+                # Erreur générale
+                print(f"❌ Erreur: {str(e)}")
+                return Response({
+                    "status": "error",
+                    "error": "Erreur lors de la vérification"
+                }, status=500)
+            
 # Vue pour récupérer les frais disponibles
 class FraisDisponiblesView(APIView):
     authentication_classes = [JWTAuthentication]
