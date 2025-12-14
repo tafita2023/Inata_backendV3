@@ -1317,7 +1317,7 @@ class AdminNoteListView(generics.ListAPIView):
     
 class DevoirListCreateView(generics.ListCreateAPIView):
     serializer_class = ExerciceSerializer
-    permission_classes = [IsAuthenticated, IsAdmin]  # Ajout de IsAdmin pour création
+    permission_classes = [IsAuthenticated, IsAdminOrProf]
 
     def get_queryset(self):
         queryset = Exercice.objects.all().order_by('-date_creation')
