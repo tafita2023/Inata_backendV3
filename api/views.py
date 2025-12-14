@@ -1343,14 +1343,19 @@ class UpdatePhotoView(APIView):
     def put(self, request):
         user = request.user
         photo = request.FILES.get('photo')
+
         if photo:
             user.photo = photo
             user.save()
-            serializer = UserSerializer(user, context={'request': request})
-            return Response({'photo': serializer.data['photo']})
-        return Response({"detail": "Aucune photo fournie"}, status=400)
-    
-@api_view(['GET'])
+
+            # URL complète
+            photo_url = user.photo.url
+            if not photo_url.startswith('http'):
+                photo_url = f"{settings.BASE_URL}{photo_url}"
+
+            return Response({'photo': photo_url})
+
+        return Response({"detail": "Aucune photo fournie"}, status=400)@api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdmin])
 def admin_notes_etudiants(request):
     classe_id = request.GET.get("classe")

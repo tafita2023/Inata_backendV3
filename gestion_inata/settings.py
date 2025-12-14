@@ -138,6 +138,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://gestion-inata.onrender.com"
 ]
 
+BASE_URL = os.environ.get("BASE_URL", "http://127.0.0.1:8000")
+
 FRONTEND_URL = os.environ.get(
     "FRONTEND_URL",
     "http://localhost:5173"
