@@ -135,6 +135,11 @@ CORS_ALLOWED_ORIGINS = [
     "https://gestion-inata.onrender.com"
 ]
 
+FRONTEND_URL = os.environ.get(
+    "FRONTEND_URL",
+    "http://localhost:5173"
+)
+
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "Authorization",
      "Content-Type",
