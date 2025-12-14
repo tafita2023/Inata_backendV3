@@ -276,6 +276,7 @@ class GetInvitationView(APIView):
             data = {"role": invitation.role}
             if invitation.role == "etud" and invitation.classe:
                 data["classe"] = invitation.classe.niveau
+                data["classe_id"] = invitation.classe.id
             return Response(data, status=200)
         except InvitationLink.DoesNotExist:
             return Response({"error": "Lien invalide ou expiré"}, status=404)
