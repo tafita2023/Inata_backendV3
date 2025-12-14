@@ -56,7 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
             attrs.pop('classe_id', None)
         else:
             # Étudiant => classe_id obligatoire
-            if 'classe_id' not in attrs or attrs['classe_id'] is None:
+            if 'classe_id' not in attrs or attrs['classe'] is None:
                 raise serializers.ValidationError({"classe_id": "Classe obligatoire pour les étudiants."})
 
         return super().validate(attrs)
