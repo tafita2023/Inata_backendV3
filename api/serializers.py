@@ -45,7 +45,6 @@ class UserSerializer(serializers.ModelSerializer):
         return None
 
     def validate(self, attrs):
-        """Supprime les champs non nécessaires selon le rôle"""
         role = attrs.get('role') or getattr(self.instance, 'role', None)
 
         if role != 'etud':
@@ -53,21 +52,19 @@ class UserSerializer(serializers.ModelSerializer):
             attrs.pop('date_naissance', None)
             attrs.pop('lieu_naissance', None)
             attrs.pop('classe', None)
-            attrs.pop('classe_id', None)
         else:
-            # Étudiant => classe_id obligatoire
-            if 'classe_id' not in attrs or attrs['classe'] is None:
+            # Étudiant => classe obligatoire
+            if 'classe' not in attrs or attrs['classe'] is None:
                 raise serializers.ValidationError({"classe_id": "Classe obligatoire pour les étudiants."})
 
         return super().validate(attrs)
-
-    def create(self, validated_data):
-        password = validated_data.pop('password', None)
-        user = super().create(validated_data)
-        if password:
-            user.set_password(password)
-            user.save()
-        return user
+        def create(self, validated_data):
+            password = validated_data.pop('password', None)
+            user = super().create(validated_data)
+            if password:
+                user.set_password(password)
+                user.save()
+            return user
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
