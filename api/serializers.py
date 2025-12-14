@@ -58,7 +58,8 @@ class UserSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"classe_id": "Classe obligatoire pour les étudiants."})
 
         return super().validate(attrs)
-        def create(self, validated_data):
+    
+    def create(self, validated_data):
             password = validated_data.pop('password', None)
             user = super().create(validated_data)
             if password:
