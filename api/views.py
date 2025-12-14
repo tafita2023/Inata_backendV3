@@ -1459,6 +1459,8 @@ class UpdatePhotoView(APIView):
             return Response({'photo': photo_url})
 
         return Response({"detail": "Aucune photo fournie"}, status=400)@api_view(['GET'])
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdmin])
 def admin_notes_etudiants(request):
     classe_id = request.GET.get("classe")
@@ -1466,9 +1468,9 @@ def admin_notes_etudiants(request):
     annee = request.GET.get("annee")
 
     notes = Note.objects.select_related(
-        "etudiant__classe", 
+        "etudiant__classe",
         "evaluation__matiere"
-    ).all()
+    )
 
     if classe_id:
         notes = notes.filter(etudiant__classe_id=classe_id)
