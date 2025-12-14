@@ -765,7 +765,7 @@ class DownloadBulletinView(APIView):
 
         notes_examens_s2 = Note.objects.filter(
             etudiant=etudiant,
-            evaluation__type='examen',
+            evaluation__type='Examen',
             evaluation__semestre=2
         ).select_related('evaluation__matiere__unite').order_by(
             'evaluation__matiere__unite__nom', 'evaluation__matiere__nom'
